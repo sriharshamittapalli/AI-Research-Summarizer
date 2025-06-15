@@ -3,6 +3,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --sidebar-bg: #F8F8F8;
+  --sidebar-text: #333333;
+  --sidebar-accent: #FFA500;
 }
 
 @theme inline {
@@ -23,4 +26,10 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* A subtle noise texture for the sidebar background */
+.bg-noise-pattern {
+  background-color: var(--sidebar-bg);
+  background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none" overflow="visible" fill="%23000000" style="opacity:0.05"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100" height="100" filter="url(%23n)"/></svg>');
 }
