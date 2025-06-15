@@ -4,17 +4,14 @@ import { getServerSession } from 'next-auth/next';
 import { createClient } from '@supabase/supabase-js';
 import { authOptions } from '@/lib/auth';
 
-// You must add SUPABASE_SERVICE_ROLE_KEY to your .env.local file
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
 const AI_MODEL = "mistralai/Mixtral-8x7B-Instruct-v0.1";
 
 // 👇 NEW GET FUNCTION TO FETCH CHAT HISTORY
 export async function GET(req: Request) {
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
         return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -49,9 +46,14 @@ export async function GET(req: Request) {
 
 
 export async function POST(req: Request) {
-  if (!TOGETHER_API_KEY) {
-      return NextResponse.json({ error: 'API key is not configured.' }, { status: 500 });
-  }
+    const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
+    if (!TOGETHER_API_KEY) {
+        return NextResponse.json({ error: 'API key is not configured.' }, { status: 500 });
+    }
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
   try {
     // ⭐️ PASS authOptions to getServerSession
