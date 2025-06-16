@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { FcGoogle } from 'react-icons/fc';
-import Link from 'next/link'; // 👈 ADD THIS IMPORT
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -91,14 +91,12 @@ export default function LoginPage() {
           </div>
         </form>
 
-        {/* 👇 THIS IS THE NEW PART TO ADD 👇 */}
         <p className="text-sm text-center text-gray-600">
                             Don&apos;t have an account?{' '}
             <Link href="/signup" className="font-medium text-orange-600 hover:text-orange-500">
                 Sign Up
             </Link>
         </p>
-        {/* 👆 END OF NEW PART 👆 */}
 
       </div>
     </main>

@@ -37,7 +37,6 @@ export default function RecentlyViewedPage() {
                     <button onClick={() => handleChat(paper)} className="flex items-center gap-2 text-sm text-gray-600 hover:text-orange-600 transition-colors">
                         <MessageCircle className="w-4 h-4" /> Start Chat
                     </button>
-                    {/* FIX: Add a button to remove the paper from recently viewed */}
                     <button onClick={(e) => handleRemove(e, paper.link)} className="flex items-center gap-2 text-sm text-red-500 hover:text-red-700 transition-colors">
                         <Trash2 className="w-4 h-4" /> Remove
                     </button>

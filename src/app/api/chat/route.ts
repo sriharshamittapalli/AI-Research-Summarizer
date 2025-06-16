@@ -6,7 +6,6 @@ import { authOptions } from '@/lib/auth';
 
 const AI_MODEL = "mistralai/Mixtral-8x7B-Instruct-v0.1";
 
-// 👇 NEW GET FUNCTION TO FETCH CHAT HISTORY
 export async function GET(req: Request) {
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -90,13 +89,11 @@ export async function POST(req: Request) {
 
 
     // ⭐️ STEP 3: Call the AI model to get a response.
-    // 👇 FIX: Apply the required instruction format for the Mixtral model
     const prompt = `[INST] Based on the following paper, answer the user's question.\n\nTitle: ${paper.title}\nAbstract: ${paper.summary}\n\nQuestion: ${userMessage} [/INST]`;
     
     const aiResponse = await fetch("https://api.together.xyz/v1/chat/completions", {
       method: 'POST',
       headers: { "Authorization": `Bearer ${TOGETHER_API_KEY}`, "Content-Type": "application/json" },
-      // 👇 FIX: Send the formatted prompt in a single user message
       body: JSON.stringify({ model: AI_MODEL, messages: [{ role: "user", content: prompt }], temperature: 0.7, max_tokens: 800 })
     });
 

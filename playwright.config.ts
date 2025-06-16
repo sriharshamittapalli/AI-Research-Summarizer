@@ -4,7 +4,6 @@ import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 import path from 'path';
 
-// FIX: Point dotenv to your .env.local file
 dotenv.config({ path: path.resolve(__dirname, '.env.local') });
 
 /**
