@@ -1,12 +1,11 @@
 // src/app/components/NavLinks.tsx
 'use client';
 
-import { Compass, MessageCircle, Library, History, Eye } from 'lucide-react'; // 📖 NEW: Import icons
+import { Compass, MessageCircle, Library, History, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
 
-// 📖 NEW: Updated links for clarity
 const links = [
   { name: 'Browse', href: '/dashboard/browse', icon: Compass },
   { name: 'Chat', href: '/dashboard/chat', icon: MessageCircle },
