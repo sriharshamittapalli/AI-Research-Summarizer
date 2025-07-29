@@ -1,4 +1,4 @@
-// src/app/dashboard/page.tsx (SERVER-SIDE AUTH CHECK)
+// src/app/dashboard/page.tsx (Replace the entire file)
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { DashboardClient } from './dashboard-client'

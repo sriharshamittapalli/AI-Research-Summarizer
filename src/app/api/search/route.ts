@@ -1,5 +1,5 @@
 // src/app/api/search/route.ts
-import { NextRequest } from 'next/server'
+import { NextRequest } from 'next/server'  // Add this import
 import { ArxivService } from '@/lib/arxiv-service'
 
 export async function GET(request: NextRequest) {
