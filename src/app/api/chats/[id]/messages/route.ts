@@ -1,15 +1,15 @@
-// src/app/api/chats/[id]/messages/route.ts
+// src/app/api/chats/[id]/messages/route.ts (Updated)
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest } from 'next/server'
+import { ArxivService } from '@/lib/arxiv-service'
+import { AIService } from '@/lib/ai-service'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Await params in Next.js 15
     const { id } = await params
-    
     const supabase = await createClient()
     
     // Check authentication
@@ -24,7 +24,7 @@ export async function POST(
       return Response.json({ error: 'Message content is required' }, { status: 400 })
     }
 
-    // Verify user owns this chat
+    // Verify user owns this chat and get chat info
     const { data: chat, error: chatError } = await supabase
       .from('chats')
       .select('*')
@@ -35,6 +35,14 @@ export async function POST(
     if (chatError || !chat) {
       return Response.json({ error: 'Chat not found' }, { status: 404 })
     }
+
+    // Get conversation history
+    const { data: previousMessages } = await supabase
+      .from('messages')
+      .select('content, role, created_at')
+      .eq('chat_id', id)
+      .order('created_at', { ascending: true })
+      .limit(10) // Last 10 messages for context
 
     // Save user message
     const { data: userMessage, error: userMessageError } = await supabase
@@ -52,8 +60,37 @@ export async function POST(
       return Response.json({ error: 'Failed to save message' }, { status: 500 })
     }
 
-    // Generate AI response (simple for now)
-    const aiResponse = generateAIResponse(content, paper_context)
+    // Generate enhanced AI response
+    let aiResponse: string
+
+    if (paper_context) {
+      try {
+        // Fetch fresh paper data if needed
+        const arxivService = new ArxivService()
+        const paperData = await arxivService.getPaperById(chat.paper_arxiv_id)
+        
+        if (paperData) {
+          const aiService = new AIService()
+          const response = await aiService.generateResponse(content.trim(), {
+            paper: paperData,
+            conversationHistory: previousMessages?.map(msg => ({
+              role: msg.role as 'user' | 'assistant',
+              content: msg.content,
+              timestamp: msg.created_at
+            })) || []
+          })
+          
+          aiResponse = response.content
+        } else {
+          aiResponse = generateFallbackResponse(content, paper_context)
+        }
+      } catch (error) {
+        console.error('Error generating AI response:', error)
+        aiResponse = generateFallbackResponse(content, paper_context)
+      }
+    } else {
+      aiResponse = "I don't have access to the paper content right now. Please try refreshing the page."
+    }
 
     // Save assistant message
     const { data: assistantMessage, error: assistantMessageError } = await supabase
@@ -88,30 +125,21 @@ export async function POST(
   }
 }
 
-// Simple AI response generator (we'll enhance this later)
-function generateAIResponse(userMessage: string, paperContext: any): string {
+// Fallback response for when AI service fails
+function generateFallbackResponse(userMessage: string, paperContext: any): string {
   const message = userMessage.toLowerCase()
   
-  if (!paperContext) {
-    return "I don't have access to the paper content right now. Please try refreshing the page."
-  }
-
-  if (message.includes('main contribution') || message.includes('contribution')) {
-    return `Based on the paper "${paperContext.title}", I can help you understand the main contributions. The abstract mentions: "${paperContext.abstract.substring(0, 200)}..." Would you like me to elaborate on any specific aspect?`
+  if (message.includes('summary') || message.includes('summarize')) {
+    return `## Paper Summary\n\n**Title:** ${paperContext.title}\n\n**Authors:** ${paperContext.authors.join(', ')}\n\n**Abstract:** ${paperContext.abstract}\n\nThis gives you an overview of the paper's main focus and contributions. What specific aspect would you like to explore further?`
   }
   
   if (message.includes('methodology') || message.includes('method')) {
-    return `Regarding the methodology in "${paperContext.title}", I can see from the abstract that the authors focused on specific approaches. The paper abstract provides: "${paperContext.abstract.substring(0, 200)}..." What specific methodological aspect would you like to discuss?`
+    return `## About the Methodology\n\nBased on the abstract, this paper discusses various methodological approaches. The full methodology would be detailed in the paper's Methods section.\n\n**From the abstract:** "${paperContext.abstract.substring(0, 200)}..."\n\nFor detailed methodological information, I'd recommend reviewing the full paper. What specific methodological aspect interests you?`
   }
   
-  if (message.includes('authors') || message.includes('who wrote')) {
-    return `This paper was written by: ${paperContext.authors.join(', ')}. These researchers collaborated on "${paperContext.title}". Would you like to know more about their work or the paper's content?`
+  if (message.includes('contribution') || message.includes('novel')) {
+    return `## Main Contributions\n\nThis research contributes to the field through:\n\n• Novel approaches described in the abstract\n• Methodological advances\n• Empirical findings and analysis\n\n**Key insight from abstract:** "${paperContext.abstract.substring(100, 300)}..."\n\nWould you like me to elaborate on any specific contribution?`
   }
   
-  if (message.includes('summary') || message.includes('summarize')) {
-    return `Here's a summary based on the abstract: "${paperContext.abstract}". This gives you an overview of the paper's scope and findings. What specific aspect would you like me to explain further?`
-  }
-  
-  // Default response
-  return `Thank you for your question about "${paperContext.title}". While I can provide information based on the paper's metadata and abstract, for detailed technical discussions, I'd recommend reviewing the full paper. The abstract states: "${paperContext.abstract.substring(0, 150)}..." What specific aspect interests you most?`
+  return `Thank you for your question about "${paperContext.title}". \n\nBased on the paper's abstract: "${paperContext.abstract.substring(0, 200)}..."\n\nThis research appears to focus on important aspects of ${paperContext.title.split(' ').slice(0, 5).join(' ')}. \n\nWhat specific aspect of this work interests you most? I can help explain different parts of the research based on the available information.`
 }

@@ -1,4 +1,4 @@
-// src/app/chat/[id]/chat-interface.tsx (Create this file)
+// src/app/chat/[id]/chat-interface.tsx (Fixed version)
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -26,6 +26,50 @@ interface ChatInterfaceProps {
   chat: Chat
   initialMessages: Message[]
   user: { id: string; email?: string }
+}
+
+// Format AI message function
+const formatAIMessage = (content: string) => {
+  const lines = content.split('\n')
+  const formattedContent = []
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    
+    if (line.startsWith('## ')) {
+      formattedContent.push(
+        <h3 key={i} className="text-lg font-semibold text-gray-900 mb-2 mt-4">
+          {line.replace('## ', '')}
+        </h3>
+      )
+    } else if (line.startsWith('**') && line.endsWith('**')) {
+      formattedContent.push(
+        <p key={i} className="font-semibold text-gray-800 mb-1">
+          {line.replace(/\*\*/g, '')}
+        </p>
+      )
+    } else if (line.startsWith('• ')) {
+      formattedContent.push(
+        <li key={i} className="ml-4 mb-1 text-gray-700">
+          {line.replace('• ', '')}
+        </li>
+      )
+    } else if (line.startsWith('🔍 ') || line.startsWith('💡 ') || line.startsWith('📚 ') || line.startsWith('⚠️ ')) {
+      formattedContent.push(
+        <p key={i} className="mb-2 text-gray-700 bg-blue-50 p-2 rounded">
+          {line}
+        </p>
+      )
+    } else if (line.trim()) {
+      formattedContent.push(
+        <p key={i} className="mb-2 text-gray-700">
+          {line}
+        </p>
+      )
+    }
+  }
+  
+  return <div className="space-y-1">{formattedContent}</div>
 }
 
 export function ChatInterface({ chat, initialMessages, user }: ChatInterfaceProps) {
@@ -259,7 +303,11 @@ export function ChatInterface({ chat, initialMessages, user }: ChatInterfaceProp
                       : 'bg-white border border-gray-200 text-gray-900'
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  {message.role === 'assistant' ? (
+                    formatAIMessage(message.content)
+                  ) : (
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  )}
                   <p
                     className={`text-xs mt-1 ${
                       message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
